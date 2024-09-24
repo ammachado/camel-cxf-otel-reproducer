@@ -16,6 +16,7 @@
  */
 package org.apache.camel.opentelemetry.starter;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -44,7 +45,13 @@ public class OpenTelemetryAutoConfiguration {
         OpenTelemetryTracer openTelemetryTracer = new OpenTelemetryTracer();
 
         openTelemetry.ifAvailable(openTelemetryTracer::setOpenTelemetry);
+        if (openTelemetryTracer.getOpenTelemetry() == null) {
+            // GlobalOpenTelemetry.get() is always NotNull, falls back to OpenTelemetry.noop()
+            openTelemetryTracer.setOpenTelemetry(GlobalOpenTelemetry.get());
+        }
+
         tracer.ifAvailable(openTelemetryTracer::setTracer);
+
         contextPropagators.ifAvailable(openTelemetryTracer::setContextPropagators);
 
         if (config.getExcludePatterns() != null) {

@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
@@ -219,9 +218,7 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
         ObjectHelper.notNull(camelContext, "CamelContext", this);
 
         if (openTelemetry == null) {
-            // GlobalOpenTelemetry.get() is always NotNull, falls back to OpenTelemetry.noop()
-            LOG.warn("OpenTelemetry instance is not set, using GlobalOpenTelemetry.get() instead");
-            openTelemetry = GlobalOpenTelemetry.get();
+            throw new IllegalStateException("OpenTelemetry instance is not set");
         }
 
         camelContext.getManagementStrategy().addEventNotifier(eventNotifier);
