@@ -11,5 +11,5 @@ Please download the OpenTelemetry agent from https://github.com/open-telemetry/o
 
 ### Traces without fixes
 
-- CXF async mode: [<img src="images/cxf-async-no-fixes.png">]
-- CXF sync mode: [<img src="images/cxf-sync-no-fixes.png">]
+- CXF async mode: <img src="images/cxf-async-no-fixes.png">
+- CXF sync mode: <img src="images/cxf-sync-no-fixes.png">

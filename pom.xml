@@ -114,7 +114,8 @@
     </build>
 
     <modules>
-        <module>camel-cxf-fixes</module>
+        <module>camel-opentelemetry-fixes</module>
+        <module>cxf-fixes</module>
         <module>reproducer</module>
     </modules>
 

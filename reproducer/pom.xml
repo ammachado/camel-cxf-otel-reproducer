@@ -26,12 +26,16 @@
         <!-- The work-in-progress fixes -->
 <!--        <dependency>-->
 <!--            <groupId>my.example</groupId>-->
-<!--            <artifactId>camel-cxf-fixes</artifactId>-->
+<!--            <artifactId>camel-opentelemetry-fixes</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>my.example</groupId>-->
+<!--            <artifactId>cxf-fixes</artifactId>-->
 <!--            <version>${project.version}</version>-->
 <!--        </dependency>-->
 
         <!-- Or use the original OTEL implementation from Camel: -->
-
         <dependency>
             <groupId>org.apache.camel.springboot</groupId>
             <artifactId>camel-opentelemetry-starter</artifactId>
