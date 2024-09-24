@@ -16,11 +16,12 @@
  */
 package org.apache.camel.opentelemetry.starter;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import org.apache.camel.CamelContext;
 import org.apache.camel.opentelemetry.OpenTelemetryTracer;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,32 +33,30 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "camel.opentelemetry.enabled", matchIfMissing = true)
 public class OpenTelemetryAutoConfiguration {
 
-    @Autowired(required = false)
-    private Tracer tracer;
-
-    @Autowired(required = false)
-    private ContextPropagators contextPropagators;
-
     @Bean(initMethod = "", destroyMethod = "")
     // Camel handles the lifecycle of this bean
     @ConditionalOnMissingBean(OpenTelemetryTracer.class)
     OpenTelemetryTracer openTelemetryEventNotifier(CamelContext camelContext,
-                                                   OpenTelemetryConfigurationProperties config) {
-        OpenTelemetryTracer ottracer = new OpenTelemetryTracer();
-        if (tracer != null) {
-            ottracer.setTracer(tracer);
-        }
-        if (contextPropagators != null) {
-            ottracer.setContextPropagators(contextPropagators);
-        }
-        if (config.getExcludePatterns() != null) {
-            ottracer.setExcludePatterns(config.getExcludePatterns());
-        }
-        if (config.getEncoding() != null) {
-            ottracer.setEncoding(config.getEncoding());
-        }
-        ottracer.init(camelContext);
+                                                   OpenTelemetryConfigurationProperties config,
+                                                   ObjectProvider<OpenTelemetry> openTelemetry,
+                                                   ObjectProvider<Tracer> tracer,
+                                                   ObjectProvider<ContextPropagators> contextPropagators) {
+        OpenTelemetryTracer openTelemetryTracer = new OpenTelemetryTracer();
 
-        return ottracer;
+        openTelemetry.ifAvailable(openTelemetryTracer::setOpenTelemetry);
+        tracer.ifAvailable(openTelemetryTracer::setTracer);
+        contextPropagators.ifAvailable(openTelemetryTracer::setContextPropagators);
+
+        if (config.getExcludePatterns() != null) {
+            openTelemetryTracer.setExcludePatterns(config.getExcludePatterns());
+        }
+
+        if (config.getEncoding() != null) {
+            openTelemetryTracer.setEncoding(config.getEncoding());
+        }
+
+        openTelemetryTracer.init(camelContext);
+
+        return openTelemetryTracer;
     }
 }

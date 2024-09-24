@@ -127,8 +127,6 @@
             <plugin>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-codegen-plugin</artifactId>
-                <!-- TODO: Version is not managed on latest version, it was previously on Camel 4.0.0 -->
-                <version>${cxf.version}</version>
                 <executions>
                     <execution>
                         <id>generate-sources</id>
@@ -162,7 +160,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <id>repackage</id>

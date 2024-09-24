@@ -32,16 +32,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-
             <dependency>
                 <groupId>org.apache.camel</groupId>
-                <artifactId>camel-base-engine</artifactId>
+                <artifactId>camel-allcomponents</artifactId>
                 <version>${camel-redhat.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>camel-tracing</artifactId>
-                <version>${camel-redhat.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
@@ -58,6 +54,11 @@
 
             <dependency>
                 <groupId>io.opentelemetry.semconv</groupId>
+                <artifactId>opentelemetry-semconv</artifactId>
+                <version>1.25.0-alpha</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.semconv</groupId>
                 <artifactId>opentelemetry-semconv-incubating</artifactId>
                 <version>1.25.0-alpha</version>
             </dependency>
@@ -70,6 +71,11 @@
                 <groupId>io.opentelemetry.instrumentation</groupId>
                 <artifactId>opentelemetry-instrumentation-api-incubator</artifactId>
                 <version>2.6.0-alpha</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.contrib</groupId>
+                <artifactId>opentelemetry-processors</artifactId>
+                <version>1.39.0-alpha</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -115,8 +121,33 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>3.5.0</version>
+                </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <configuration>
+                            <rules>
+                                <dependencyConvergence/>
+                            </rules>
+                        </configuration>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <modules>

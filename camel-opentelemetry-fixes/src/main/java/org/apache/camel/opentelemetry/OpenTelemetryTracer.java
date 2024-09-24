@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
@@ -105,6 +106,15 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
     private String excludePatterns;
     private InterceptStrategy tracingStrategy;
     private CamelContext camelContext;
+    private OpenTelemetry openTelemetry;
+
+    public OpenTelemetry getOpenTelemetry() {
+        return openTelemetry;
+    }
+
+    public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+        this.openTelemetry = openTelemetry;
+    }
 
     public Tracer getTracer() {
         return tracer;
@@ -208,10 +218,17 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
     protected void doInit() {
         ObjectHelper.notNull(camelContext, "CamelContext", this);
 
+        if (openTelemetry == null) {
+            // GlobalOpenTelemetry.get() is always NotNull, falls back to OpenTelemetry.noop()
+            LOG.warn("OpenTelemetry instance is not set, using GlobalOpenTelemetry.get() instead");
+            openTelemetry = GlobalOpenTelemetry.get();
+        }
+
         camelContext.getManagementStrategy().addEventNotifier(eventNotifier);
         if (!camelContext.getRoutePolicyFactories().contains(this)) {
             camelContext.addRoutePolicyFactory(this);
         }
+
         camelContext.getCamelContextExtension().addLogListener(logListener);
 
         if (tracingStrategy != null) {
@@ -251,9 +268,11 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
             tracer = CamelContextHelper.findSingleByType(getCamelContext(), Tracer.class);
         }
         if (tracer == null) {
-            // GlobalOpenTelemetry.get() is always NotNull, falls back to OpenTelemetry.noop()
-            tracer = GlobalOpenTelemetry.get().getTracer(instrumentationName);
+            tracer = openTelemetry.getTracer(instrumentationName);
         }
+
+        assert tracer != null;
+
         if (traceProcessors && (getTracingStrategy() == null
                 || getTracingStrategy().getClass().isAssignableFrom(NoopTracingStrategy.class))) {
             OpenTelemetryTracingStrategy openTelemetryTracingStrategy = new OpenTelemetryTracingStrategy(this);
@@ -267,9 +286,10 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
             contextPropagators = CamelContextHelper.findSingleByType(getCamelContext(), ContextPropagators.class);
         }
         if (contextPropagators == null) {
-            // GlobalOpenTelemetry.get() is always NotNull, falls back to OpenTelemetry.noop()
-            contextPropagators = GlobalOpenTelemetry.get().getPropagators();
+
+            contextPropagators = openTelemetry.getPropagators();
         }
+        assert contextPropagators != null;
     }
 
     protected Context startSpan(Exchange exchange, SpanDecorator sd, Endpoint endpoint, SpanKind kind) {
@@ -282,8 +302,8 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
         }
         if (context == null) {
             ExtractAdapter adapter = sd.getExtractAdapter(exchange.getIn().getHeaders(), encoding);
-            context = GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator().extract(Context.root(), adapter,
-                    new OpenTelemetryGetter(adapter));
+            context = contextPropagators.getTextMapPropagator()
+                    .extract(Context.root(), adapter, new OpenTelemetryGetter(adapter));
         }
         if (context == null) {
             context = Context.root();
@@ -300,8 +320,9 @@ public class OpenTelemetryTracer extends ServiceSupport implements CamelTracingS
     }
 
     protected void inject(Holder holder, InjectAdapter adapter) {
-        GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator().inject(holder.getContext(), adapter,
-                new OpenTelemetrySetter());
+        assert contextPropagators != null;
+        contextPropagators.getTextMapPropagator()
+                .inject(holder.getContext(), adapter, new OpenTelemetrySetter());
     }
 
     @Override
